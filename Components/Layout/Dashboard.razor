@@ -1,0 +1,142 @@
+﻿@page "/dashboard"
+@inject NavigationManager NavigationManager
+@inject UserService UserService
+@using MyPocketTrack.Components.Modals
+@using MudBlazor
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
+    <MudPaper Class="pa-8" Style="background: linear-gradient(to right, #26f695 50%, white 50%);">
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                 <MudCard Class="pa-4">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6" Color="Color.Primary">Total Cash Inflows</MudText>
+                        <MudText Typo="Typo.h4" Color="Color.Secondary" Class="mt-2">${totalInflows}</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudCard Class="pa-4">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6" Color="Color.Primary">Total Cash Outflows</MudText>
+                        <MudText Typo="Typo.h4" Color="Color.Secondary" Class="mt-2">${totalOutflows}</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudCard Class="pa-4">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6" Color="Color.Primary">Total Debts</MudText>
+                        <MudText Typo="Typo.h4" Color="Color.Secondary" Class="mt-2">${totalDebts}</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Class="mt-4">
+            <MudItem xs="12" md="6">
+                <MudCard Class="pa-4">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6" Color="Color.Primary">Pending Debts</MudText>
+                        <MudList>
+                            @foreach (var debt in pendingDebts)
+                            {
+                                <MudListItem>
+                                    <MudText>@debt.Source</MudText>
+                                    <MudText Class="mt-1" Typo="Typo.body2" Color="Color.Default">Due: @debt.DueDate.ToShortDateString()</MudText>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudCard Class="pa-4">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6" Color="Color.Primary">Top 5 Highest Transactions</MudText>
+                        <MudList>
+                            @foreach (var transaction in highestTransactions)
+                            {
+                                <MudListItem>
+                                    <MudText>@transaction.Title - ${transaction.Amount}</MudText>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private decimal totalInflows;
+    private decimal totalOutflows;
+    private decimal totalDebts;
+    private List<Transaction> highestTransactions = new List<Transaction>();
+    private List<Debt> pendingDebts = new List<Debt>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        // Simulated data loading, replace with actual data fetching logic
+        var transactions = await GetTransactionsAsync(); // Get all transactions (cash inflows and outflows)
+        var debts = await GetDebtsAsync(); // Get all debts
+
+        // Calculate total inflows, outflows, and debts
+        totalInflows = transactions.Where(t => t.Type == "Credit").Sum(t => t.Amount);
+        totalOutflows = transactions.Where(t => t.Type == "Debit").Sum(t => t.Amount);
+        totalDebts = debts.Sum(d => d.Amount);
+
+        // Get top 5 highest transactions
+        highestTransactions = transactions.OrderByDescending(t => t.Amount).Take(5).ToList();
+
+        // Get pending debts
+        pendingDebts = debts.Where(d => d.DueDate > DateTime.Now && d.Amount > 0).ToList();
+    }
+
+    // Simulate fetching transactions from a data source
+    private Task<List<Transaction>> GetTransactionsAsync()
+    {
+        return Task.FromResult(new List<Transaction>
+        {
+            new Transaction { Title = "Salary", Type = "Credit", Amount = 1200 },
+            new Transaction { Title = "Rent", Type = "Debit", Amount = 500 },
+            new Transaction { Title = "Groceries", Type = "Debit", Amount = 150 },
+            new Transaction { Title = "Freelance", Type = "Credit", Amount = 700 },
+            new Transaction { Title = "Gym", Type = "Debit", Amount = 50 }
+        });
+    }
+
+    // Simulate fetching debts from a data source
+    private Task<List<Debt>> GetDebtsAsync()
+    {
+        return Task.FromResult(new List<Debt>
+        {
+            new Debt { Source = "Credit Card", Amount = 200, DueDate = DateTime.Now.AddDays(7) },
+            new Debt { Source = "Loan", Amount = 1500, DueDate = DateTime.Now.AddMonths(1) }
+        });
+    }
+
+    // Transaction and Debt classes (example)
+    public class Transaction
+    {
+        public string Title { get; set; }
+        public string Type { get; set; } // "Credit" or "Debit"
+        public decimal Amount { get; set; }
+    }
+
+    public class Debt
+    {
+        public string Source { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime DueDate { get; set; }
+    }
+}

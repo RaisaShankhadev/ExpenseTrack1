@@ -1,0 +1,100 @@
+﻿@page "/register"
+
+    @inject UserService UserService
+
+    @inject NavigationManager NavigationManager
+
+    @using MyPocketTrack.Components.Modals
+    @using MudBlazor
+
+    <MudContainer MaxWidth="MaxWidth.Small" Class="mt-16">
+        <MudPaper Class="pa-8" Style="background: linear-gradient(to right, #B2FFFF 50%, white 50%);">
+            <MudGrid>
+                <MudItem xs="6">
+                    <div class="d-flex flex-column justify-space-between" style="height: 100%; color: white;">
+                        <div class="mt-8">
+                            <h3 class="text-center">Register</h3>
+                        </div>
+                    </div>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <div class="d-flex flex-column" style="min-height: 400px;">
+
+                        <MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-2">Hello!</MudText>
+                        <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-8">Create Account</MudText>
+
+                        <EditForm Model="@registerModel" OnValidSubmit="HandleRegistration">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            @if (!string.IsNullOrEmpty(errorMessage))
+                                {
+                            <div class="alert alert-danger">@errorMessage</div>
+                                }
+
+                            <MudTextField @bind-Value="registerModel.Username"
+                                          Label="Username"
+                                          Variant="Variant.Outlined"
+                                          Class="mb-4" />
+
+                            <MudTextField @bind-Value="registerModel.Password"
+                                          Label="Password"
+                                          Variant="Variant.Outlined"
+                                          InputType="InputType.Password"
+                                          Class="mb-4" />
+
+                            <MudSelect @bind-Value="registerModel.CurrencyType"
+                                       Label="Currency Type"
+                                       Variant="Variant.Outlined"
+                                       Class="mb-6">
+                                <MudSelectItem Value="@("USD")">USD ($)</MudSelectItem>
+                                <MudSelectItem Value="@("EUR")">EUR (€)</MudSelectItem>
+                                <MudSelectItem Value="@("GBP")">GBP (£)</MudSelectItem>
+                                <MudSelectItem Value="@("JPY")">JPY (¥)</MudSelectItem>
+                                <MudSelectItem Value="@("INR")">INR (Re.)</MudSelectItem>
+                                <MudSelectItem Value="@("NEP")">NEP (Rs.)</MudSelectItem>
+                            </MudSelect>
+
+                            <MudButton ButtonType="ButtonType.Submit"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       FullWidth="true"
+                                       Size="Size.Large"
+                                       Class="mb-4">
+                                Register
+                            </MudButton>
+                        </EditForm>
+
+                        <MudText Align="Align.Center" Class="mt-4">
+                            Already have an account?
+                            <a href="/login"> Login here</a>
+                        </MudText>
+                    </div>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </MudContainer>
+
+    @code {
+    private User registerModel = new User();
+private string? errorMessage;
+
+private async Task HandleRegistration()
+{
+    errorMessage = string.Empty;
+    if (string.IsNullOrWhiteSpace(registerModel.CurrencyType))
+    {
+        errorMessage = "Currency Type is required.";
+        return;
+    }
+    var success = await UserService.RegisterUserAsync(registerModel);
+    if (success)
+    {
+        NavigationManager.NavigateTo("/login", forceLoad: true);
+    }
+    else
+    {
+        errorMessage = "Username already exists. Please choose a different username.";
+    }
+}
+    }

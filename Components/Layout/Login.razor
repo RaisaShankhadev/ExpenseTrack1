@@ -1,0 +1,81 @@
+﻿@page "/login"
+@inject UserService UserService
+@inject NavigationManager NavigationManager
+@using MyPocketTrack.Components.Modals
+@using MudBlazor
+@using MyPocketTrack.Services
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
+    <MudPaper Class="pa-8" Style="background: linear-gradient(to right, #26f695 50%, white 50%);">
+        <MudGrid>
+            <MudItem xs="6">
+                <div class="flex justify-space-between items-center jusify-content-center" style="height: 100%; color: black;">
+                        <h1 class="text-center">My Pocket Track</h1>
+                </div>
+            </MudItem>
+
+            <MudItem xs="6">
+                <div class="d-flex flex-column" style="min-height: 400px;">          
+                    <MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-2">Hello there!</MudText>
+                    <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-8">Welcome Back</MudText>
+
+                    <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <MudAlert Severity="Severity.Error" Class="mb-4">@errorMessage</MudAlert>
+                        }
+
+                        <MudTextField 
+                            @bind-Value="loginModel.Username"
+                            Label="Username"
+                            Variant="Variant.Outlined"
+                            Class="mb-4" />
+
+                        <MudTextField 
+                            @bind-Value="loginModel.Password"
+                            Label="Password"
+                            Variant="Variant.Outlined"
+                            InputType="InputType.Password"
+                            Class="mb-6" />
+
+                        <MudButton 
+                            ButtonType="ButtonType.Submit"
+                            Variant="Variant.Filled"
+                            Color="Color.Primary"
+                            FullWidth="true"
+                            Size="Size.Large"
+                            Class="mb-4">
+                            Sign in
+                        </MudButton>
+                    </EditForm>
+
+                    <MudText Align="Align.Center" Class="mt-4">
+                        Don't have an account? 
+                        <a href="/register" class="btn btn-link"> Register here</a>
+                    </MudText>
+                </div>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private User loginModel = new User();
+    private string? errorMessage;
+
+    private async Task HandleLogin()
+    {
+        var user = await UserService.ValidateUserAsync(loginModel.Username, loginModel.Password);
+        if (user != null)
+        {
+            await UserService.LoginAsync(loginModel.Username, loginModel.Password);
+            NavigationManager.NavigateTo("/", forceLoad: true);
+        }
+        else
+        {
+            errorMessage = "Invalid username or password";
+        }
+    }
